@@ -66,68 +66,8 @@ public class Example01 {
 				List<UserTag> tagUserlist = UserTagRepository.getMatchList(keyword) ;
 
 				if(knownList.isEmpty() && tagUserlist.isEmpty()) {
-					try
-					{
-						URL TestURL
-						 = new URL("https://api.a3rt.recruit-tech.co.jp/talk/v1/smalltalk");
-			   	 		URLConnection con = TestURL.openConnection();
-
-						//	送信するよ！指定
-						con.setDoOutput(true);
-
-						//--------------------
-						//送信する
-						//--------------------
-						OutputStreamWriter	ow1
-							= new OutputStreamWriter(con.getOutputStream());
-						BufferedWriter bw1 = new BufferedWriter(ow1);
-
-						//POSTの内容を書き出す
-						bw1.write("apikey=DZZ6NlFh2sNTmKhBYilbVyWrBezkk3s0&query=" + content);
-
-						//	クローズ
-						bw1.close();
-						ow1.close();
-
-						//--------------------
-						//受信する
-						//--------------------
-						InputStreamReader	ir1
-							= new InputStreamReader(con.getInputStream());
-						BufferedReader	br1 = new BufferedReader(ir1);
-
-
-			            StringBuilder buf = new StringBuilder();
-			            String line;
-
-			            while ((line = br1.readLine()) != null) {
-			                buf.append(line);
-			            }
-
-			            System.out.println(convertToOiginal(buf.toString()));
-
-			            String hensindata = convertToOiginal(buf.toString());
-						//replyタグの後ろを取り出す
-						String reply = "エラーです。"; // 返り値
-							int offset = 0;
-							offset = hensindata.indexOf("reply");
-							if (hensindata.startsWith("reply", offset)) {
-								int end = hensindata.indexOf("}", offset);
-								reply = hensindata.substring(offset+9, end-1);
-							}
-
-						// 返信
-						sendAsThread(req,resp,reply);
-
-						//	クローズ
-						br1.close();
-						ir1.close();
-
-					}
-					catch(Exception e)
-					{
-						e.printStackTrace();
-					}
+					String reply = nativeTalk(noMentionContent);
+					sendAsThread(req, resp,reply);
 
 				}
 				else {
@@ -136,7 +76,8 @@ public class Example01 {
 
 						knownList.stream()
 						.forEach(s -> sendAsThread(req,resp,s.getKnownKey() + "は「" + s.getReply() + "」やで。"));
-					}else if(!tagUserlist.isEmpty()) {
+					}
+					if(!tagUserlist.isEmpty()) {
 						tagUserlist.stream()
 						.forEach(s -> sendAsThread(req,resp,"<@" + s.getUserid() + "> さん。" + s.getTag() + "やぞ。"));
 					}
@@ -189,6 +130,70 @@ public class Example01 {
 			ioe.printStackTrace();
 		}
 
+	}
+
+	static String nativeTalk(String content) {
+		String reply = "エラーです。"; // 返り値
+		try
+		{
+			URL TestURL
+			= new URL("https://api.a3rt.recruit-tech.co.jp/talk/v1/smalltalk");
+			URLConnection con = TestURL.openConnection();
+
+			//	送信するよ！指定
+			con.setDoOutput(true);
+
+			//--------------------
+			//送信する
+			//--------------------
+			OutputStreamWriter	ow1
+			= new OutputStreamWriter(con.getOutputStream());
+			BufferedWriter bw1 = new BufferedWriter(ow1);
+
+			//POSTの内容を書き出す
+			bw1.write("apikey=DZZ6NlFh2sNTmKhBYilbVyWrBezkk3s0&query=" + content);
+
+			//	クローズ
+			bw1.close();
+			ow1.close();
+
+			//--------------------
+			//受信する
+			//--------------------
+			InputStreamReader	ir1
+			= new InputStreamReader(con.getInputStream());
+			BufferedReader	br1 = new BufferedReader(ir1);
+
+
+			StringBuilder buf = new StringBuilder();
+			String line;
+
+			while ((line = br1.readLine()) != null) {
+				buf.append(line);
+			}
+
+			System.out.println(convertToOiginal(buf.toString()));
+
+			String hensindata = convertToOiginal(buf.toString());
+			//replyタグの後ろを取り出す
+			int offset = 0;
+			offset = hensindata.indexOf("reply");
+			if (hensindata.startsWith("reply", offset)) {
+				int end = hensindata.indexOf("}", offset);
+				reply = hensindata.substring(offset+9, end-1);
+			}
+
+			//	クローズ
+			br1.close();
+			ir1.close();
+
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		// 返信
+		return reply;
 	}
 
 }
