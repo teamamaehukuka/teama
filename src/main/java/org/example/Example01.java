@@ -202,6 +202,7 @@ public class Example01 {
 			System.out.println(convertToOiginal(buf.toString()));
 
 			String hensindata = convertToOiginal(buf.toString());
+			
 			//replyタグの後ろを取り出す
 			int offset = 0;
 			offset = hensindata.indexOf("reply");
