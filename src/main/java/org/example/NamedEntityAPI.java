@@ -11,18 +11,16 @@ import java.util.Map;
 import json.GooRequestJSON;
 import json.GooResponseJSON;
 import net.arnx.jsonic.JSON;
+import rikyu.Rikyu;
+import rikyu.model.Sentence;
 
 public class NamedEntityAPI {
 
-	public static void main(String[] args) throws Exception{
-		String ret = analyzeByGoo("javaについて教えて");
-
-		System.out.println("resp:"+ret);
-
-		//JSONObject json = new JSONObject(ret);
-		//JSONArray result = json.getJSONArray("result");
-		//System.out.println(result);
-
+	public static void main(String[] args) {
+		Rikyu.init();
+		Sentence sentence = Rikyu.analyze("プレゼンが不安です。");
+		System.out.println(sentence.getPoint());
+		sentence.getWordList().forEach(e->System.out.println(e.getReading() + ":" + e.getPoint() + ":" +e.getPos()));
 	}
 
 	static String analyzeNamedEntity(String sentence) throws Exception {
@@ -58,7 +56,7 @@ public class NamedEntityAPI {
 
 	}
 
-	static String analyzeByGooTokeyword(String sentence) {
+	static String analyzeSingleKeywordByGoo(String sentence) {
 
 		String keyword = "";
 
@@ -69,6 +67,7 @@ public class NamedEntityAPI {
 		}
 
 		GooResponseJSON json = JSON.decode(keyword,GooResponseJSON.class);
+		System.out.println(keyword);
 
 		List<Map<String, Double>> keywords = json.getKeywords();
 
@@ -77,8 +76,8 @@ public class NamedEntityAPI {
 
 		for(Map<String, Double> m:  keywords) {
 			for(Map.Entry<String, Double> e : m.entrySet()) {
-				System.out.println(e.getKey() + ":" + e.getValue());
 				if(e.getValue() > maxScore) {
+					System.out.println(e.getKey() + ":" + e.getValue());
 					maxScore = e.getValue();
 					maxKey = e.getKey();
 				}

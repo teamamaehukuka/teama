@@ -17,14 +17,29 @@ import org.riversun.slacklet.SlackletRequest;
 import org.riversun.slacklet.SlackletResponse;
 import org.riversun.slacklet.SlackletService;
 import org.riversun.xternal.simpleslackapi.SlackSession;
+import org.riversun.xternal.simpleslackapi.events.ReactionAdded;
 import org.riversun.xternal.simpleslackapi.impl.SlackSessionFactory;
+import org.riversun.xternal.simpleslackapi.listeners.ReactionAddedListener;
 
 import entity.KnownReply;
 import entity.UserTag;
 import repository.KnownReplyRepository;
 import repository.UserTagRepository;
+import rikyu.Rikyu;
+import rikyu.model.Sentence;
 
 public class Example01 {
+
+	static ReactionAddedListener listener = new ReactionAddedListener() {
+
+		@Override
+		public void onEvent(ReactionAdded event, SlackSession session) {
+			if("100".equals(event.getEmojiName())){
+				session.sendMessage(event.getChannel(), event.getItemUser().getRealName() + "さん、よい回答ですね。100点あげます。");
+			}
+
+		}
+	};
 
 	public static void main(String[] args) throws IOException {
 
@@ -55,19 +70,30 @@ public class Example01 {
 
 				String noMentionContent = content.replaceAll("<.*>", "");
 
-				String keyword  = NamedEntityAPI.analyzeByGooTokeyword(noMentionContent);
+				String keyword  = NamedEntityAPI.analyzeSingleKeywordByGoo(noMentionContent);
 
 				String mention = req.getUserDisp();
 
 				System.out.println(req.getRawPostedMessage().getJsonSource());
 
-				List<KnownReply> knownList = KnownReplyRepository.getMatchList(keyword);
+				List<KnownReply> knownList = KnownReplyRepository.getMatchedList(keyword);
 
-				List<UserTag> tagUserlist = UserTagRepository.getMatchList(keyword) ;
+				List<UserTag> tagUserlist = UserTagRepository.getMatchedList(keyword) ;
 
 				if(knownList.isEmpty() && tagUserlist.isEmpty()) {
 					String reply = nativeTalk(noMentionContent);
-					sendAsThread(req, resp,reply);
+					String emoji = "";
+					Rikyu.init();
+					Sentence sentence = Rikyu.analyze(reply);
+					if(sentence.getPoint() > 0) {
+						emoji = ":grinning:";
+					}else if(sentence.getPoint() == 0) {
+						emoji = ":neutral_face:";
+					}else {
+						emoji = ":sweat:";
+					}
+
+					sendAsThread(req, resp,reply +"やで～" + emoji);
 
 				}
 				else {
@@ -75,16 +101,17 @@ public class Example01 {
 					if(!knownList.isEmpty()) {
 
 						knownList.stream()
-						.forEach(s -> sendAsThread(req,resp,s.getKnownKey() + "は「" + s.getReply() + "」やで。"));
+						.forEach(s -> sendAsThread(req,resp,s.getKnownKey() + "は「" + s.getReply() + "」やで～"));
 					}
 					if(!tagUserlist.isEmpty()) {
 						tagUserlist.stream()
-						.forEach(s -> sendAsThread(req,resp,"<@" + s.getUserid() + "> さん。" + s.getTag() + "やぞ。"));
+						.forEach(s -> sendAsThread(req,resp,"<@" + s.getUserid() + "> さん。" + s.getTag() + "やぞ"));
 					}
 				}
 
+				resp.getSession().removeReactionAddedListener(listener);
+				resp.getSession().addReactionAddedListener(listener);
 			}
-
 
 		});
 

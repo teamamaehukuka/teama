@@ -14,7 +14,7 @@ public class UserTagRepository {
 		return list;
 	};
 
-	public static List<UserTag> getMatchList(String content){
+	public static List<UserTag> getMatchedList(String content){
 		return list.stream().filter(s -> content.equals(s.getTag())).collect(Collectors.toList());
 	};
 
@@ -24,7 +24,6 @@ public class UserTagRepository {
 
 	static {
 		list.add(new UserTag("UK94F9EDD","java"));
-		list.add(new UserTag("UK94F9EDD","うんこ"));
 		list.add(new UserTag("UK94F9EDD","ピカチュウ"));
 		list.add(new UserTag("UJVR39QMR","java"));
 	}

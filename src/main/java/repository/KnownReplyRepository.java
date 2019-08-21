@@ -14,13 +14,15 @@ public class KnownReplyRepository {
 		return list;
 	};
 
-	public static List<KnownReply> getMatchList(String content){
+	public static List<KnownReply> getMatchedList(String content){
 		return list.stream().filter(s -> content.equals(s.getKnownKey())).collect(Collectors.toList());
 	};
 
 	static {
 		list.add(new KnownReply("javac","javaをコンパイルすること"));
 		list.add(new KnownReply("ピカチュウ","電気ネズミ"));
+		list.add(new KnownReply("前泊","実家なら2500円、営業旅館なら10000円"));
+		list.add(new KnownReply("SLCハッカソン","第1回優勝チームはAチームです"));
 	}
 
 }
